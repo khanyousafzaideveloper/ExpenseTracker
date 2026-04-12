@@ -6,22 +6,18 @@ import '../controller/expense_controller.dart';
 import '../controller/theme_provider.dart';
 import 'add_edit_expense_page.dart';
 import 'expense_detail_page.dart';
+import 'statistics_page.dart';
+import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key}); // remove onToggleTheme and isDarkMode
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ExpenseProvider>().loadExpenses();
-    });
-  }
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +31,31 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Expense Tracker'),
         centerTitle: false,
         scrolledUnderElevation: 1,
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-            ),
-            tooltip: themeProvider.isDark ? 'Light Mode' : 'Dark Mode',
-            onPressed: themeProvider.toggleTheme,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) =>
+            setState(() => _currentIndex = index),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Expenses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'Statistics',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
@@ -53,35 +63,51 @@ class _HomePageState extends State<HomePage> {
           );
         },
         child: const Icon(Icons.add),
-      ),
-      body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+      )
+          : null,
+      body: IndexedStack(
+        index: _currentIndex,
         children: [
-          _buildDailySummary(context, provider.expenses),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: SearchBar(
-              hintText: 'Search expenses...',
-              leading: Icon(
-                Icons.search,
-                color: colorScheme.onSurfaceVariant,
+          // Tab 0: Expenses
+          provider.loading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+            children: [
+              _buildDailySummary(context, provider.expenses),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: SearchBar(
+                  hintText: 'Search expenses...',
+                  leading: Icon(
+                    Icons.search,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(
+                    colorScheme.surfaceContainerHighest,
+                  ),
+                  padding: const WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  onChanged: (value) {
+                    context
+                        .read<ExpenseProvider>()
+                        .setSearchQuery(value);
+                  },
+                ),
               ),
-              elevation: const WidgetStatePropertyAll(0),
-              backgroundColor: WidgetStatePropertyAll(
-                colorScheme.surfaceContainerHighest,
+              Expanded(
+                child: _buildExpenseList(
+                    context, provider.filteredExpenses),
               ),
-              padding: const WidgetStatePropertyAll(
-                EdgeInsets.symmetric(horizontal: 16),
-              ),
-              onChanged: (value) {
-                context.read<ExpenseProvider>().setSearchQuery(value);
-              },
-            ),
+            ],
           ),
-          Expanded(
-            child: _buildExpenseList(context, provider.filteredExpenses),
-          ),
+
+          // Tab 1: Statistics
+          const StatisticsPage(),
+
+          // Tab 2: Settings
+          const SettingsPage(),
         ],
       ),
     );
@@ -123,7 +149,8 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   DateFormat.yMMMd().format(today),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                    color:
+                    colorScheme.onPrimaryContainer.withOpacity(0.7),
                   ),
                 ),
               ],
