@@ -33,11 +33,3 @@ A simple and clean Flutter app to manage your daily expenses, track spending, an
 </p>
 
 ---
-
-## 🚀 Getting Started
-
-Clone the repository:
-
-```bash
-git clone https://github.com/your-username/expense_tracker.git
-cd expense_tracker
