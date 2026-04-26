@@ -18,7 +18,7 @@ A simple and clean Flutter app to manage your daily expenses, track spending, an
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="assets/add.png" width="1170"/>
+  <img src="assets/add.png" width="250"/>
   <img src="assets/delete.png" width="250"/>
   <img src="assets/detail.png" width="250"/>
 </p>
